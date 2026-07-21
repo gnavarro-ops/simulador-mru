@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Simulación Interactiva - MRU</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Segoe UI,Arial;
+background:#eef4fb;
+}
+
+header{
+background:#0A4F8F;
+color:white;
+padding:15px;
+text-align:center;
+font-size:28px;
+font-weight:bold;
+}
+
+#contenedor{
+display:grid;
+grid-template-columns:420px 1fr;
+gap:20px;
+padding:20px;
+}
+
+.panel{
+
+background:white;
+border-radius:12px;
+padding:20px;
+box-shadow:0px 0px 15px rgba(0,0,0,.15);
+
+}
+
+label{
+font-weight:bold;
+}
+
+input[type=range]{
+width:100%;
+}
+
+button{
+padding:10px 20px;
+font-size:16px;
+margin:5px;
+cursor:pointer;
+}
+
+canvas{
+background:white;
+border:1px solid #777;
+border-radius:10px;
+}
+
+#datos{
+
+font-size:20px;
+line-height:1.8;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+MOVIMIENTO RECTILÍNEO UNIFORME (MRU)
+
+</header>
+
+<div id="contenedor">
+
+<div class="panel">
+
+<h2>Controles</h2>
+
+<label>Velocidad (m/s)</label>
+
+<input id="velocidad" type="range" min="1" max="40" value="10">
+
+<span id="velTxt">10</span> m/s
+
+<br><br>
+
+<label>Tiempo de simulación (s)</label>
+
+<input id="tiempoTotal" type="range" min="5" max="40" value="20">
+
+<span id="tTxt">20</span> s
+
+<br><br>
+
+<button onclick="iniciar()">▶ Iniciar</button>
+
+<button onclick="pausar()">⏸ Pausa</button>
+
+<button onclick="reiniciar()">↺ Reiniciar</button>
+
+<hr>
+
+<div id="datos">
+
+Tiempo:
+<span id="tiempo">0.0</span> s
+
+<br>
+
+Posición:
+<span id="distancia">0.0</span> m
+
+<br>
+
+Velocidad:
+
+<span id="velPanel">10</span> m/s
+
+<br>
+
+Aceleración:
+
+0 m/s²
+
+</div>
+
+<hr>
+
+<b>Conclusión</b>
+
+<p>
+
+En el MRU la velocidad permanece constante.
+
+Por ello, el gráfico Posición vs Tiempo es una línea recta cuya pendiente representa la velocidad.
+
+</p>
+
+</div>
+
+<div class="panel">
+
+<canvas id="grafico" width="750" height="450"></canvas>
+
+</div>
+
+</div>
+
+<script>
+
+let canvas=document.getElementById("grafico");
+
+let ctx=canvas.getContext("2d");
+
+let tiempo=0;
+
+let intervalo;
+
+let puntos=[];
+
+let andando=false;
+
+function dibujarEjes(){
+
+ctx.clearRect(0,0,750,450);
+
+ctx.strokeStyle="black";
+
+ctx.lineWidth=2;
+
+ctx.beginPath();
+
+ctx.moveTo(60,30);
+
+ctx.lineTo(60,390);
+
+ctx.lineTo(700,390);
+
+ctx.stroke();
+
+ctx.font="16px Arial";
+
+ctx.fillText("Distancia (m)",5,25);
+
+ctx.fillText("Tiempo (s)",620,425);
+
+for(let i=0;i<=10;i++){
+
+let x=60+i*64;
+
+ctx.beginPath();
+
+ctx.moveTo(x,390);
+
+ctx.lineTo(x,396);
+
+ctx.stroke();
+
+}
+
+for(let i=0;i<=10;i++){
+
+let y=390-i*36;
+
+ctx.beginPath();
+
+ctx.moveTo(54,y);
+
+ctx.lineTo(60,y);
+
+ctx.stroke();
+
+}
+
+}
+
+function graficar(){
+
+dibujarEjes();
+
+ctx.strokeStyle="#0A6BE8";
+
+ctx.lineWidth=3;
+
+ctx.beginPath();
+
+for(let i=0;i<puntos.length;i++){
+
+let p=puntos[i];
+
+let x=60+p.t*640/document.getElementById("tiempoTotal").value;
+
+let dmax=document.getElementById("velocidad").value*
+document.getElementById("tiempoTotal").value;
+
+let y=390-p.d*360/dmax;
+
+if(i==0)
+
+ctx.moveTo(x,y);
+
+else
+
+ctx.lineTo(x,y);
+
+}
+
+ctx.stroke();
+
+if(puntos.length>0){
+
+let p=puntos[puntos.length-1];
+
+let x=60+p.t*640/document.getElementById("tiempoTotal").value;
+
+let dmax=document.getElementById("velocidad").value*
+document.getElementById("tiempoTotal").value;
+
+let y=390-p.d*360/dmax;
+
+ctx.fillStyle="red";
+
+ctx.beginPath();
+
+ctx.arc(x,y,6,0,Math.PI*2);
+
+ctx.fill();
+
+}
+
+}
+
+function iniciar(){
+
+if(andando)return;
+
+andando=true;
+
+intervalo=setInterval(function(){
+
+let v=Number(document.getElementById("velocidad").value);
+
+let T=Number(document.getElementById("tiempoTotal").value);
+
+tiempo+=0.1;
+
+let d=v*tiempo;
+
+document.getElementById("tiempo").innerHTML=tiempo.toFixed(1);
+
+document.getElementById("distancia").innerHTML=d.toFixed(1);
+
+puntos.push({t:tiempo,d:d});
+
+graficar();
+
+if(tiempo>=T){
+
+clearInterval(intervalo);
+
+andando=false;
+
+}
+
+},100);
+
+}
+
+function pausar(){
+
+clearInterval(intervalo);
+
+andando=false;
+
+}
+
+function reiniciar(){
+
+clearInterval(intervalo);
+
+andando=false;
+
+tiempo=0;
+
+puntos=[];
+
+document.getElementById("tiempo").innerHTML="0.0";
+
+document.getElementById("distancia").innerHTML="0.0";
+
+graficar();
+
+}
+
+velocidad.oninput=function(){
+
+velTxt.innerHTML=this.value;
+
+velPanel.innerHTML=this.value;
+
+graficar();
+
+}
+
+tiempoTotal.oninput=function(){
+
+tTxt.innerHTML=this.value;
+
+graficar();
+
+}
+
+dibujarEjes();
+
+</script>
+
+</body>
+</html>
